@@ -1,66 +1,92 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import { NgClass, NgStyle } from '@angular/common';
+import { NgClass } from '@angular/common';
+import { OpenaiService } from '../services/openai.service';
 
 @Component({
   selector: 'app-camera',
   standalone: true,
   imports: [
     NgClass,
-    NgStyle
   ],
   templateUrl: './camera.component.html',
   styleUrl: './camera.component.scss'
 })
 export class CameraComponent implements AfterViewInit {
-  WIDTH = 512;
-  HEIGHT = 512;
+  photoWidth = 512;
+  photoHeight = 512;
 
-  @ViewChild('video',{ static: true })
-  public video!: ElementRef;
+  @ViewChild('video')
+  public video!: ElementRef<HTMLVideoElement>;
 
-  @ViewChild('canvas', { static: true })
-  public canvas!: ElementRef;
+  @ViewChild('canvas')
+  public canvas!: ElementRef<HTMLCanvasElement>;
 
-  captures: string[] = [];
-  error: any = null;
-  isCaptured = false;
+  takePicture = true;
+  loading = false;
+  variationUrl = '';
 
-  async ngAfterViewInit() {
+  constructor(public ai: OpenaiService) {
+  }
+
+  async ngAfterViewInit(): Promise<void> {
     await this.setupDevices();
   }
 
-  async setupDevices() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true
-        });
-        if (stream) {
-          this.video.nativeElement.srcObject = stream;
-          this.video.nativeElement.play();
-          this.error = null;
-        } else {
-          this.error = "You have no output video device";
-        }
-      } catch (e) {
-        this.error = e;
+  async setupDevices(): Promise<void> {
+    if (navigator?.mediaDevices?.getUserMedia) {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      });
+
+      if (stream) {
+        this.video.nativeElement.srcObject = stream;
+        await this.video.nativeElement.play();
       }
     }
   }
 
-  capture() {
-    this.drawImageToCanvas(this.video.nativeElement);
-    this.isCaptured = true;
+  async capture(): Promise<void> {
+    this.variationUrl = '';
+    this.loading = true;
+    this.takePicture = false;
+    const dataURI = this.drawVideoCaptureToCanvas(this.video.nativeElement);
+
+    await this.ai.createImageVariation(dataURI).then(async apiResponse => {
+      console.log('....')
+      const imageData = await apiResponse;
+
+      console.log('data:');
+      console.log(imageData);
+
+      console.log(imageData.data.data);
+
+      this.loading = false;
+      this.variationUrl = imageData.data.data[0].url;
+
+
+      const image = new Image();
+      image.src = this.variationUrl;
+
+      this.drawImageToCanvas(image);
+    });
   }
 
-  removeCurrent() {
-    this.isCaptured = false;
+  removeCurrent(): void {
+    this.variationUrl = '';
+    this.takePicture = true;
   }
 
-  drawImageToCanvas(image: ElementRef<HTMLVideoElement>) {
+  private drawImageToCanvas(image: any): void {
+    // @ts-ignore
     this.canvas.nativeElement
       .getContext("2d")
       .drawImage(image, 0, 0);
+  }
+
+  private drawVideoCaptureToCanvas(image: any): string {
+    this.drawImageToCanvas(image);
+
+    return this.canvas.nativeElement.toDataURL("image/png");
   }
 
 }

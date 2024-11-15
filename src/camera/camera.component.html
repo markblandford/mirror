@@ -1,14 +1,24 @@
 <div class="flex flex-col justify-center">
   <div class="flex justify-center capture p-5">
-    <video [ngClass]="{'hidden': isCaptured}" #video id="video" [width]="WIDTH" [height]="HEIGHT" autoplay disablepictureinpicture></video>
-    <canvas [ngClass]="{'hidden': !isCaptured}" #canvas id="canvas" [width]="WIDTH" [height]="HEIGHT"></canvas>
+    <video [ngClass]="{'hidden': loading || variationUrl}" #video id="video" [width]="photoWidth" [height]="photoHeight" autoplay disablepictureinpicture></video>
+
+    <div class="flex flex-col">
+      <canvas [ngClass]="{'hidden': !loading || variationUrl}" #canvas id="canvas" [width]="photoWidth" [height]="photoHeight"></canvas>
+      @if (loading) {
+        <div class="text-1xl text-center">Is that <strong>really</strong> you there?</div>
+      }
+    </div>
+
+    <img [src]="variationUrl" [ngClass]="{'hidden': !variationUrl}" alt="your new image">
   </div>
 
-  <div class="flex justify-center py-4">
-    @if (isCaptured) {
-      <button type="button" class="btn btn-blue" (click)="removeCurrent()">Take Another</button>
-    } @else {
-      <button type="button" class="btn btn-blue" (click)="capture()">Who's in the mirror?</button>
-    }
-  </div>
+  @if (!loading) {
+    <div class="flex justify-center py-4">
+      @if (takePicture) {
+        <button type="submit" class="btn btn-blue" (click)="capture()">Who's in the mirror?</button>
+      } @else {
+        <button type="button" class="btn btn-blue" (click)="removeCurrent()">Take Another</button>
+      }
+    </div>
+  }
 </div>
