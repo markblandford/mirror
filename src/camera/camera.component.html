@@ -1,1 +1,14 @@
-<p>camera works!</p>
+<div class="flex flex-col justify-center">
+  <div class="flex justify-center capture p-5">
+    <video [ngClass]="{'hidden': isCaptured}" #video id="video" [width]="WIDTH" [height]="HEIGHT" autoplay disablepictureinpicture></video>
+    <canvas [ngClass]="{'hidden': !isCaptured}" #canvas id="canvas" [width]="WIDTH" [height]="HEIGHT"></canvas>
+  </div>
+
+  <div class="flex justify-center py-4">
+    @if (isCaptured) {
+      <button type="button" class="btn btn-blue" (click)="removeCurrent()">Take Another</button>
+    } @else {
+      <button type="button" class="btn btn-blue" (click)="capture()">Who's in the mirror?</button>
+    }
+  </div>
+</div>

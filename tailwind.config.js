@@ -4,6 +4,9 @@ module.exports = {
     "./src/**/*.{html,ts}",
   ],
   theme: {
+    container: {
+      center: true,
+    },
     fontFamily: {
       sans: [
         '"Inter var", Arial, Helvetica, sans-serif',
